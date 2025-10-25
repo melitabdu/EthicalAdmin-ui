@@ -1,0 +1,26 @@
+.booking-page {
+  padding: 2rem;
+  background-color: #fff;
+  color: #333;
+}
+
+.booking-message {
+  margin: 1rem 0;
+  color: green;
+}
+
+.booking-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.booking-table th,
+.booking-table td {
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+
+.booking-table th {
+  background-color: #f5f5f5;
+}

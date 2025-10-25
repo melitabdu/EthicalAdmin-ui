@@ -1,0 +1,69 @@
+.admin-dashboard-container {
+  padding: 20px;
+}
+
+.dashboard-search {
+  display: flex;
+  margin-bottom: 20px;
+}
+
+.dashboard-search input {
+  flex: 1;
+  padding: 8px;
+  border-radius: 5px 0 0 5px;
+  border: 1px solid #ccc;
+}
+
+.dashboard-search button {
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-left: none;
+  border-radius: 0 5px 5px 0;
+  background-color: #4caf50;
+  color: white;
+  cursor: pointer;
+}
+
+.dashboard-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.stat-card {
+  background-color: #f3f3f3;
+  padding: 15px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.stat-card h3 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.dashboard-links {
+  margin-top: 20px;
+}
+
+.links-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.links-grid button {
+  padding: 12px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  background-color: #1976d2;
+  color: white;
+  font-size: 0.9rem;
+  transition: 0.2s;
+}
+
+.links-grid button:hover {
+  background-color: #115293;
+}

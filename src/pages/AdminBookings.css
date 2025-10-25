@@ -1,0 +1,91 @@
+.admin-bookings-page {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.admin-bookings-page h2 {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.message {
+  text-align: center;
+  font-weight: bold;
+  margin-bottom: 15px;
+  color: #1f75fe;
+}
+
+/* Desktop table */
+.bookings-table-container {
+  overflow-x: auto;
+}
+
+.bookings-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.bookings-table th,
+.bookings-table td {
+  padding: 12px 10px;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+
+.bookings-table th {
+  background-color: #1f75fe;
+  color: #fff;
+}
+
+.bookings-table td select {
+  padding: 5px;
+  border-radius: 4px;
+}
+
+/* Mobile cards */
+.mobile-bookings-container {
+  display: none;
+}
+
+.booking-card {
+  background: #fff;
+  margin-bottom: 15px;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+}
+
+.booking-card p {
+  margin: 5px 0;
+}
+
+.card-actions button {
+  margin-right: 10px;
+  margin-top: 10px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+}
+
+.card-actions button.delete-btn {
+  background: #ff4d4d;
+  color: #fff;
+}
+
+.card-actions button:hover {
+  opacity: 0.9;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .bookings-table-container {
+    display: none;
+  }
+
+  .mobile-bookings-container {
+    display: block;
+  }
+}
