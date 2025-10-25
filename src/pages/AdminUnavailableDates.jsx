@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import api from "../api"; // ✅ Correct centralized Axios instance
-import { useAdminAuth } from "../context/adminAuthContext";
+import { useAdminAuth } from "../context/AdminAuthContext";
 
 const AdminUnavailableDates = () => {
   const { token } = useAdminAuth();

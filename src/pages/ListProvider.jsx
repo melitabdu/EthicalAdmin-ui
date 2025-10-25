@@ -1,7 +1,7 @@
 // src/pages/ListProvider.jsx
 import React, { useEffect, useState } from "react";
 import api from "../api"; // Centralized Axios instance
-import { useAdminAuth } from "../context/adminAuthContext";
+import { useAdminAuth } from "../context/AdminAuthContext";
 import { useNavigate } from "react-router-dom";
 import "./ListProvider.css";
 
