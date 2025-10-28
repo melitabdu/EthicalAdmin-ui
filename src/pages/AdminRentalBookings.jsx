@@ -3,6 +3,9 @@ import axios from "axios";
 import * as XLSX from "xlsx";
 import "./AdminRentalBookings.css";
 
+const backendUrl = import.meta.env.VITE_API_BASE_URL;
+const secretKey = import.meta.env.VITE_ADMIN_SECRET;
+
 const AdminRentalBookings = () => {
   const [bookings, setBookings] = useState([]);
   const [message, setMessage] = useState("");
@@ -12,16 +15,13 @@ const AdminRentalBookings = () => {
   const [visibleCount, setVisibleCount] = useState(10);
   const [selectedIdImage, setSelectedIdImage] = useState(null);
 
-  const secretKey = import.meta.env.VITE_ADMIN_SECRET;
-  const backendUrl = "http://localhost:5000"; // Adjust for deployed URL
-
   // Fetch bookings
   const fetchBookings = async () => {
     try {
       const res = await axios.get(`${backendUrl}/api/admin/rental-bookings`, {
         headers: { "x-admin-secret": secretKey },
       });
-      setBookings(res.data);
+      setBookings(res.data.data || res.data);
     } catch (err) {
       setMessage(err.response?.data?.message || "❌ Failed to load bookings");
       setBookings([]);
@@ -231,7 +231,6 @@ const AdminRentalBookings = () => {
             </tbody>
           </table>
 
-          {/* Load more */}
           {visibleCount < filteredBookings.length && (
             <div className="load-more">
               <button onClick={() => setVisibleCount((c) => c + 10)}>
@@ -257,7 +256,11 @@ const AdminRentalBookings = () => {
               <img
                 src={selectedIdImage.secure_url}
                 alt="ID Document"
-                style={{ maxWidth: "80%", maxHeight: "400px", borderRadius: "6px" }}
+                style={{
+                  maxWidth: "80%",
+                  maxHeight: "400px",
+                  borderRadius: "6px",
+                }}
               />
             )}
             <button

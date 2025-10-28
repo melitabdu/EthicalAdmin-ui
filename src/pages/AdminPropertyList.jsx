@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
-import api from "../api"; // centralized axios instance
+import axios from "axios"; // ✅ use axios with VITE_API_BASE_URL
 import { useAdminAuth } from "../context/AdminAuthContext";
 import "./AdminPropertyList.css";
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export default function AdminPropertyList() {
   const { token } = useAdminAuth();
@@ -12,10 +14,10 @@ export default function AdminPropertyList() {
   useEffect(() => {
     const fetchProperties = async () => {
       try {
-        const res = await api.get("/properties", {
+        const res = await axios.get(`${API_BASE_URL}/api/properties`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setProperties(res.data);
+        setProperties(res.data.data || res.data); // handle backend structure
       } catch (err) {
         console.error("Error fetching properties:", err);
       }
@@ -26,7 +28,7 @@ export default function AdminPropertyList() {
   const deleteProperty = async (id) => {
     if (!window.confirm("Delete this property?")) return;
     try {
-      await api.delete(`/properties/${id}`, {
+      await axios.delete(`${API_BASE_URL}/api/properties/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setProperties((prev) => prev.filter((p) => p._id !== id));
@@ -75,7 +77,7 @@ export default function AdminPropertyList() {
         [...form.newImages].forEach((file) => formData.append("images", file));
       }
 
-      await api.put(`/properties/${id}`, formData, {
+      await axios.put(`${API_BASE_URL}/api/properties/${id}`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",

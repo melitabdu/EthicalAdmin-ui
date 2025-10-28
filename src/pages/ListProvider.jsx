@@ -1,9 +1,11 @@
 // src/pages/ListProvider.jsx
 import React, { useEffect, useState } from "react";
-import api from "../api"; // Centralized Axios instance
+import axios from "axios"; // Axios instance per file
 import { useAdminAuth } from "../context/AdminAuthContext";
 import { useNavigate } from "react-router-dom";
 import "./ListProvider.css";
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL; // dynamic backend
 
 const ListProvider = () => {
   const { token } = useAdminAuth();
@@ -12,16 +14,18 @@ const ListProvider = () => {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
+  // Axios instance with baseURL and auth header
+  const api = axios.create({
+    baseURL: `${API_BASE_URL}/api`,
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
   useEffect(() => {
     const fetchProviders = async () => {
       try {
-        const res = await api.get("/admin/providers", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
+        const res = await api.get("/admin/providers");
         console.log("✅ Providers API Response:", res.data);
 
-        // Safely extract array depending on backend structure
         const data =
           res.data.providers ||
           res.data.data ||
@@ -44,10 +48,7 @@ const ListProvider = () => {
     if (!window.confirm("Delete this provider?")) return;
 
     try {
-      await api.delete(`/admin/provider/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
+      await api.delete(`/admin/provider/${id}`);
       setProviders((prev) => prev.filter((p) => p._id !== id));
       alert("✅ Provider deleted successfully");
     } catch (err) {
@@ -88,7 +89,7 @@ const ListProvider = () => {
               </thead>
               <tbody>
                 {providers.map((p) => {
-                  const photoURL = p.photo ? p.photo : "/default.png";
+                  const photoURL = p.photo || "/default.png";
                   return (
                     <tr key={p._id}>
                       <td>
@@ -122,7 +123,7 @@ const ListProvider = () => {
           {/* 📱 Mobile Card Layout */}
           <div className="mobile-card-container">
             {providers.map((p) => {
-              const photoURL = p.photo ? p.photo : "/default.png";
+              const photoURL = p.photo || "/default.png";
               return (
                 <div key={p._id} className="provider-card">
                   <img src={photoURL} alt={p.name} className="provider-photo" />

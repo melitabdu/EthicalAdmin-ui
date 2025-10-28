@@ -1,3 +1,4 @@
+// src/pages/AddProperty.jsx
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAdminAuth } from '../context/AdminAuthContext';
@@ -23,21 +24,28 @@ export default function AddProperty() {
   const [images, setImages] = useState([]);
   const [previews, setPreviews] = useState([]);
   const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+  // ✅ Axios instance
+  const api = axios.create({
+    baseURL: `${API_BASE_URL}/api`,
+    headers: { Authorization: `Bearer ${token}` }
+  });
 
   // Fetch owners for select dropdown
   const fetchOwners = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/owners', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setOwners(res.data.data || res.data); // handle both cases
+      const res = await api.get('/owners');
+      setOwners(res.data.data || res.data);
     } catch (err) {
       console.error(err);
     }
   };
 
   useEffect(() => {
-    fetchOwners();
+    if (token) fetchOwners();
   }, [token]);
 
   const handleChange = e => setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -70,25 +78,26 @@ export default function AddProperty() {
 
     images.forEach(img => data.append('images', img));
 
+    setLoading(true);
     try {
-      const res = await axios.post('http://localhost:5000/api/properties', data, {
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
+      const res = await api.post('/properties', data, {
+        headers: { 'Content-Type': 'multipart/form-data' }
       });
 
       setMessage(`✅ Property "${res.data.data.title}" added successfully!`);
 
-      // Reset form
       setForm({
         title: '', location: '', price: '', description: '', category: '',
         owner: '', ownerName: '', ownerPhone: '', ownerPassword: ''
       });
       setImages([]);
       setPreviews([]);
-
-      // Refresh owners for select dropdown
       fetchOwners();
     } catch (err) {
+      console.error(err);
       setMessage(`❌ Error: ${err.response?.data?.message || err.message}`);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -143,7 +152,7 @@ export default function AddProperty() {
           ))}
         </div>
 
-        <button type="submit">Add Property</button>
+        <button type="submit" disabled={loading}>{loading ? 'Adding...' : 'Add Property'}</button>
       </form>
     </div>
   );

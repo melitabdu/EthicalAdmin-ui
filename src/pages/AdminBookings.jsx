@@ -1,7 +1,8 @@
-// src/pages/AdminBookings.jsx
 import React, { useEffect, useState } from "react";
-import api from "../api"; // centralized Axios instance
+import axios from "axios"; // ✅ switch to direct axios with VITE_API_BASE_URL
 import { useAdminAuth } from "../context/AdminAuthContext";
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL; // ✅ use env variable
 
 const AdminBookings = () => {
   const { token } = useAdminAuth();
@@ -13,7 +14,7 @@ const AdminBookings = () => {
   // Fetch bookings
   const fetchBookings = async () => {
     try {
-      const res = await api.get("/bookings", {
+      const res = await axios.get(`${API_BASE_URL}/api/bookings`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -42,8 +43,8 @@ const AdminBookings = () => {
   // Update booking status
   const handleStatusChange = async (id, status) => {
     try {
-      await api.patch(
-        `/bookings/${id}`,
+      await axios.patch(
+        `${API_BASE_URL}/api/bookings/${id}`,
         { status },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -63,9 +64,13 @@ const AdminBookings = () => {
     if (!secretKey) return alert("⚠️ VITE_ADMIN_SECRET not set in .env");
 
     try {
-      const res = await api.patch(`/bookings/${id}/pay`, {}, {
-        headers: { "x-admin-secret": secretKey },
-      });
+      const res = await axios.patch(
+        `${API_BASE_URL}/api/bookings/${id}/pay`,
+        {},
+        {
+          headers: { "x-admin-secret": secretKey },
+        }
+      );
       setBookings((prev) =>
         prev.map((b) => (b._id === id ? { ...b, paid: true } : b))
       );
@@ -84,7 +89,7 @@ const AdminBookings = () => {
     if (!secretKey) return alert("⚠️ VITE_ADMIN_SECRET not set in .env");
 
     try {
-      await api.delete(`/bookings/${id}`, {
+      await axios.delete(`${API_BASE_URL}/api/bookings/${id}`, {
         headers: { "x-admin-secret": secretKey },
       });
       setBookings((prev) => prev.filter((b) => b._id !== id));
@@ -201,7 +206,7 @@ const AdminBookings = () => {
                   </p>
                   <p>
                     <strong>Provider:</strong> {b.provider?.name || "N/A"} (
-                    {b.provider?.phone || "N/A"})
+                    {b.provider?.phone || "N/A"} )
                   </p>
                   <p>
                     <strong>Date:</strong> {new Date(b.date).toLocaleDateString()}

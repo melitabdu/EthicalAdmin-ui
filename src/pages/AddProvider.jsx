@@ -1,7 +1,10 @@
+// src/pages/AddProvider.jsx
 import React, { useState } from 'react';
 import axios from 'axios';
 import './AddProvider.css';
 import { useAdminAuth } from '../context/AdminAuthContext';
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL; // ✅ dynamic backend
 
 const AddProvider = () => {
   const { token } = useAdminAuth();
@@ -18,6 +21,7 @@ const AddProvider = () => {
   const [photo, setPhoto] = useState(null);
   const [preview, setPreview] = useState(null);
   const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -38,25 +42,24 @@ const AddProvider = () => {
       return;
     }
 
+    setLoading(true);
     try {
+      // ✅ Axios instance for this component
+      const api = axios.create({
+        baseURL: `${API_BASE_URL}/api`,
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
       const formData = new FormData();
       Object.entries(form).forEach(([key, value]) => {
         formData.append(key, value);
       });
       if (photo) formData.append('photo', photo);
 
-      const res = await axios.post(
-        'http://localhost:5000/api/admin/add-provider',
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data',
-          },
-        }
-      );
+      const res = await api.post('/admin/add-provider', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
 
-      // ✅ Use provider.name from response for correct message
       setMessage(`✅ Provider "${res.data.provider.name}" added successfully`);
 
       // Reset form
@@ -71,7 +74,12 @@ const AddProvider = () => {
       setPhoto(null);
       setPreview(null);
     } catch (err) {
-      setMessage(`❌ Error: ${err.response?.data?.message || 'Something went wrong'}`);
+      console.error(err);
+      setMessage(
+        `❌ Error: ${err.response?.data?.message || 'Something went wrong'}`
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -88,7 +96,12 @@ const AddProvider = () => {
         <input name="phone" value={form.phone} onChange={handleChange} required />
 
         <label>Service Category:</label>
-        <select name="serviceCategory" value={form.serviceCategory} onChange={handleChange} required>
+        <select
+          name="serviceCategory"
+          value={form.serviceCategory}
+          onChange={handleChange}
+          required
+        >
           <option value="">-- Select --</option>
           <option value="Finishing Works">Finishing Works</option>
           <option value="Party Food Preparation">Party Food Preparation</option>
@@ -125,8 +138,10 @@ const AddProvider = () => {
         <input type="file" onChange={handlePhotoChange} accept="image/*" required />
         {preview && <img src={preview} alt="Preview" style={{ width: '60px', marginTop: '10px' }} />}
 
-        <button type="submit">Add Provider</button>
-      </form> 
+        <button type="submit" disabled={loading}>
+          {loading ? 'Adding...' : 'Add Provider'}
+        </button>
+      </form>
     </div>
   );
 };
