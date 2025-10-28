@@ -3,7 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 
 import { AdminAuthProvider } from './context/AdminAuthContext';
 import AdminLogin from './pages/AdminLogin';
-import AdminDashboard from './pages/AdminDashbord';
+import AdminDashboard from './pages/AdminDashboard';
 import AddProvider from './pages/AddProvider';
 import AddProperty from './pages/AddProperty';
 import ListProvider from './pages/ListProvider';
