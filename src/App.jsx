@@ -1,7 +1,6 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 
-import { AdminAuthProvider } from './context/AdminAuthContext';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 import AddProvider from './pages/AddProvider';
@@ -14,7 +13,8 @@ import AdminRoute from './components/AdminRoutes';
 import AdminVideoManager from './pages/AdVideoManager';
 import AdminUnavailableDates from './pages/AdminUnavailableDates';
 import AdminBookings from './pages/AdminBookings';
-import AdminRentalBookings from './pages/AdminRentalBookings'; // ✅ Rental bookings
+import AdminRentalBookings from './pages/AdminRentalBookings'; // Rental bookings
+import { AdminAuthProvider } from './context/AdminAuthContext';
 
 const App = () => {
   return (
@@ -26,11 +26,11 @@ const App = () => {
       <Route
         path="/admin/*"
         element={
-          <AdminRoute>
-            <AdminAuthProvider>
+          <AdminAuthProvider>
+            <AdminRoute>
               <SidebarLayout />
-            </AdminAuthProvider>
-          </AdminRoute>
+            </AdminRoute>
+          </AdminAuthProvider>
         }
       >
         {/* Dashboard */}
