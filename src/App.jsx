@@ -1,6 +1,8 @@
+// src/App.jsx
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 
+// Pages
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 import AddProvider from './pages/AddProvider';
@@ -8,13 +10,17 @@ import AddProperty from './pages/AddProperty';
 import ListProvider from './pages/ListProvider';
 import AdminOwnerList from './pages/AdminOwnerList';
 import AdminPropertyList from './pages/AdminPropertyList';
-import SidebarLayout from './components/SidebarLayout';
-import AdminRoute from './components/AdminRoutes';
 import AdminVideoManager from './pages/AdVideoManager';
 import AdminUnavailableDates from './pages/AdminUnavailableDates';
 import AdminBookings from './pages/AdminBookings';
-import AdminRentalBookings from './pages/AdminRentalBookings'; // Rental bookings
-import { AdminAuthProvider } from './context/AdminAuthContext';
+import AdminRentalBookings from './pages/AdminRentalBookings';
+
+// Components
+import SidebarLayout from './components/SidebarLayout';
+import AdminRoute from './components/AdminRoutes';
+
+// Context Provider
+import { AdminAuthProvider } from './context/AdminAuthContext'; // ✅ Correct import & casing
 
 const App = () => {
   return (
@@ -37,8 +43,8 @@ const App = () => {
         <Route path="dashboard" element={<AdminDashboard />} />
 
         {/* Bookings */}
-        <Route path="bookings" element={<AdminBookings />} /> {/* Service provider */}
-        <Route path="rental-bookings" element={<AdminRentalBookings />} /> {/* Rental */}
+        <Route path="bookings" element={<AdminBookings />} />
+        <Route path="rental-bookings" element={<AdminRentalBookings />} />
 
         {/* Providers / Rental Owners */}
         <Route path="providers" element={<ListProvider />} />
