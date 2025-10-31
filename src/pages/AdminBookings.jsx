@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios"; // ✅ switch to direct axios with VITE_API_BASE_URL
-import { useAdminAuth } from "../context/AdminAuthContext";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL; // ✅ use env variable
 
 const AdminBookings = () => {
-  const { token } = useAdminAuth();
+  // ✅ Get token directly from localStorage
+  const token = localStorage.getItem("adminToken");
+
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
@@ -257,7 +258,7 @@ const AdminBookings = () => {
         </>
       )}
     </div>
-  );
+  )
 };
 
 export default AdminBookings;

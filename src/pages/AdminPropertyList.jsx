@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios"; // ✅ use axios with VITE_API_BASE_URL
-import { useAdminAuth } from "../context/AdminAuthContext";
 import "./AdminPropertyList.css";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export default function AdminPropertyList() {
-  const { token } = useAdminAuth();
+  // ✅ Get token from localStorage
+  const token = localStorage.getItem("adminToken");
+
   const [properties, setProperties] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState({});
@@ -124,10 +125,20 @@ export default function AdminPropertyList() {
                       key={idx}
                       src={getImageUrl(img)}
                       alt={p.title}
-                      className={form.removedImages.includes(typeof img === "object" ? img.url : img) ? "removed" : ""}
-                      onClick={() => toggleRemoveImage(typeof img === "object" ? img.url : img)}
+                      className={
+                        form.removedImages.includes(
+                          typeof img === "object" ? img.url : img
+                        )
+                          ? "removed"
+                          : ""
+                      }
+                      onClick={() =>
+                        toggleRemoveImage(typeof img === "object" ? img.url : img)
+                      }
                       title={
-                        form.removedImages.includes(typeof img === "object" ? img.url : img)
+                        form.removedImages.includes(
+                          typeof img === "object" ? img.url : img
+                        )
                           ? "Click to restore"
                           : "Click to remove"
                       }
@@ -136,13 +147,17 @@ export default function AdminPropertyList() {
                   <input
                     type="file"
                     multiple
-                    onChange={(e) => setForm({ ...form, newImages: e.target.files })}
+                    onChange={(e) =>
+                      setForm({ ...form, newImages: e.target.files })
+                    }
                   />
                 </>
               ) : (
                 <>
                   {p.images && p.images.length > 0
-                    ? p.images.map((img, idx) => <img key={idx} src={getImageUrl(img)} alt={p.title} />)
+                    ? p.images.map((img, idx) => (
+                        <img key={idx} src={getImageUrl(img)} alt={p.title} />
+                      ))
                     : <img src="/default.png" alt="Default" />}
                 </>
               )}
@@ -161,7 +176,9 @@ export default function AdminPropertyList() {
                   <input
                     type="text"
                     value={form.location || ""}
-                    onChange={(e) => setForm({ ...form, location: e.target.value })}
+                    onChange={(e) =>
+                      setForm({ ...form, location: e.target.value })
+                    }
                     placeholder="Location"
                   />
                   <input
@@ -183,7 +200,9 @@ export default function AdminPropertyList() {
                   </select>
                   <textarea
                     value={form.description || ""}
-                    onChange={(e) => setForm({ ...form, description: e.target.value })}
+                    onChange={(e) =>
+                      setForm({ ...form, description: e.target.value })
+                    }
                     placeholder="Description"
                   />
                 </>

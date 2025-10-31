@@ -2,12 +2,12 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import './AddProvider.css';
-import { useAdminAuth } from '../context/AdminAuthContext';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL; // ✅ dynamic backend
 
 const AddProvider = () => {
-  const { token } = useAdminAuth();
+  // ✅ Get token directly from localStorage (no context)
+  const token = localStorage.getItem('adminToken');
 
   const [form, setForm] = useState({
     name: '',
@@ -23,17 +23,20 @@ const AddProvider = () => {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // ✅ Handle text/number/select input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
+  // ✅ Handle photo upload + preview
   const handlePhotoChange = (e) => {
     const file = e.target.files[0];
     setPhoto(file);
     if (file) setPreview(URL.createObjectURL(file));
   };
 
+  // ✅ Handle form submit
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -62,7 +65,7 @@ const AddProvider = () => {
 
       setMessage(`✅ Provider "${res.data.provider.name}" added successfully`);
 
-      // Reset form
+      // ✅ Reset form + preview
       setForm({
         name: '',
         phone: '',
@@ -112,7 +115,12 @@ const AddProvider = () => {
         </select>
 
         <label>Description:</label>
-        <textarea name="description" value={form.description} onChange={handleChange} required />
+        <textarea
+          name="description"
+          value={form.description}
+          onChange={handleChange}
+          required
+        />
 
         <label>Price Estimate (per day):</label>
         <input
@@ -136,7 +144,13 @@ const AddProvider = () => {
 
         <label>Photo:</label>
         <input type="file" onChange={handlePhotoChange} accept="image/*" required />
-        {preview && <img src={preview} alt="Preview" style={{ width: '60px', marginTop: '10px' }} />}
+        {preview && (
+          <img
+            src={preview}
+            alt="Preview"
+            style={{ width: '60px', marginTop: '10px' }}
+          />
+        )}
 
         <button type="submit" disabled={loading}>
           {loading ? 'Adding...' : 'Add Provider'}

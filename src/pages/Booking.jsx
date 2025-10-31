@@ -1,14 +1,15 @@
 // src/pages/AdminBookings.jsx
 import React, { useEffect, useState } from "react";
-import api from "../api"; // ✅ centralized Axios instance
-import { useAdminAuth } from "../context/AdminAuthContext";
+import api from "../api"; // centralized Axios instance
 import "./AdminBookings.css"; // optional, for styling
 
-const AdminBookings = () => {
+export default function AdminBookings() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
-  const { token } = useAdminAuth();
+
+  // ✅ Get admin token from localStorage
+  const token = localStorage.getItem("adminToken");
 
   // ✅ Fetch all bookings
   useEffect(() => {
@@ -164,6 +165,4 @@ const AdminBookings = () => {
       )}
     </div>
   );
-};
-
-export default AdminBookings;
+}

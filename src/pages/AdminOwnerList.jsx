@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useAdminAuth } from '../context/AdminAuthContext';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL; // dynamic backend
 
 export default function AdminOwnerList() {
-  const { token } = useAdminAuth();
+  // ✅ Get token directly from localStorage
+  const token = localStorage.getItem('adminToken');
+
   const [owners, setOwners] = useState([]);
   const [message, setMessage] = useState('');
 
-  // ✅ Create Axios instance with baseURL and auth header
+  // ✅ Axios instance with auth header
   const api = axios.create({
     baseURL: `${API_BASE_URL}/api`,
     headers: { Authorization: `Bearer ${token}` },

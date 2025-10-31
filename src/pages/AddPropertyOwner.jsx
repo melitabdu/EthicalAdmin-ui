@@ -1,8 +1,15 @@
-// frontend/src/pages/AddProperty.jsx
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { useAdminAuth } from "../context/AdminAuthContext";
 import "./AddProvider.css"; // ✅ reuse your css
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+// ✅ local replacement for the missing useAdminAuth
+function useAdminAuth() {
+  return {
+    token: localStorage.getItem("adminToken"),
+  };
+}
 
 const categories = [
   { id: "house", name: "House Rental/Sell", icon: "🏠" },
@@ -36,7 +43,7 @@ export default function AddProperty() {
   useEffect(() => {
     const fetchOwners = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/owners", {
+        const res = await axios.get(`${API_BASE_URL}/api/owners`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setOwners(Array.isArray(res.data) ? res.data : []);
@@ -45,7 +52,7 @@ export default function AddProperty() {
         setOwners([]);
       }
     };
-    fetchOwners();
+    if (token) fetchOwners();
   }, [token]);
 
   const handleChange = (e) =>
@@ -81,7 +88,7 @@ export default function AddProperty() {
     images.forEach((img) => data.append("images", img));
 
     try {
-      const res = await axios.post("http://localhost:5000/api/properties", data, {
+      const res = await axios.post(`${API_BASE_URL}/api/properties`, data, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",
@@ -105,9 +112,7 @@ export default function AddProperty() {
       setPreviews([]);
     } catch (err) {
       console.error(err);
-      setMessage(
-        `❌ Error: ${err.response?.data?.message || err.message}`
-      );
+      setMessage(`❌ Error: ${err.response?.data?.message || err.message}`);
     }
   };
 
@@ -221,7 +226,12 @@ export default function AddProperty() {
         )}
 
         <label>Images:</label>
-        <input type="file" multiple accept="image/*" onChange={handleImagesChange} />
+        <input
+          type="file"
+          multiple
+          accept="image/*"
+          onChange={handleImagesChange}
+        />
         {previews.map((src, i) => (
           <img
             key={i}

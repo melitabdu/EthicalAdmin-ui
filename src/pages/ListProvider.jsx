@@ -1,14 +1,15 @@
 // src/pages/ListProvider.jsx
 import React, { useEffect, useState } from "react";
 import axios from "axios"; // Axios instance per file
-import { useAdminAuth } from "../context/AdminAuthContext";
 import { useNavigate } from "react-router-dom";
 import "./ListProvider.css";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL; // dynamic backend
 
 const ListProvider = () => {
-  const { token } = useAdminAuth();
+  // ✅ get token from localStorage instead of context
+  const token = localStorage.getItem("adminToken");
+
   const [providers, setProviders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
