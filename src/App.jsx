@@ -11,7 +11,7 @@ import ListProvider from "./pages/ListProvider";
 import AdminOwnerList from "./pages/AdminOwnerList";
 import AdminPropertyList from "./pages/AdminPropertyList";
 import AdminVideoManager from "./pages/AdVideoManager";
-import AdminUnavailableDates from "./pages/AdminUnavailableDates";
+
 import AdminBookings from "./pages/AdminBookings";
 import AdminRentalBookings from "./pages/AdminRentalBookings";
 
@@ -50,7 +50,7 @@ const App = () => {
           <Route path="add-property" element={<AddProperty />} />
 
           {/* Unavailable dates */}
-          <Route path="unavailable-dates" element={<AdminUnavailableDates />} />
+          
 
           {/* Video ads */}
           <Route path="advideos" element={<AdminVideoManager />} />
