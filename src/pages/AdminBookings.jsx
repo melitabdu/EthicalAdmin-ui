@@ -1,264 +1,233 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios"; // ✅ switch to direct axios with VITE_API_BASE_URL
+import axios from "axios";
+import * as XLSX from "xlsx";
+import "./AdminBookings.css"; // ✅ optional custom CSS like AdminRentalBookings.css
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL; // ✅ use env variable
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const ADMIN_SECRET = import.meta.env.VITE_ADMIN_SECRET;
 
 const AdminBookings = () => {
-  // ✅ Get token directly from localStorage
-  const token = localStorage.getItem("adminToken");
-
   const [bookings, setBookings] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
-  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [paymentFilter, setPaymentFilter] = useState("");
+  const [visibleCount, setVisibleCount] = useState(10);
 
-  // Fetch bookings
+  // ✅ Fetch all bookings
   const fetchBookings = async () => {
     try {
       const res = await axios.get(`${API_BASE_URL}/api/bookings`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { "x-admin-secret": ADMIN_SECRET },
       });
-
       const data =
         res.data.bookings ||
         res.data.data ||
         (Array.isArray(res.data) ? res.data : []);
       setBookings(data);
     } catch (err) {
-      console.error("Failed to fetch bookings:", err);
-      setMessage("❌ Failed to load bookings");
-    } finally {
-      setLoading(false);
+      setMessage(err.response?.data?.message || "❌ Failed to load bookings");
+      setBookings([]);
     }
   };
 
-  useEffect(() => {
-    if (token) fetchBookings();
-
-    // Track window resize for responsive layout
-    const handleResize = () => setWindowWidth(window.innerWidth);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, [token]);
-
-  // Update booking status
+  // ✅ Update status
   const handleStatusChange = async (id, status) => {
     try {
       await axios.patch(
         `${API_BASE_URL}/api/bookings/${id}`,
         { status },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { "x-admin-secret": ADMIN_SECRET } }
       );
-      setBookings((prev) =>
-        prev.map((b) => (b._id === id ? { ...b, status } : b))
-      );
-      setMessage(`✅ Booking updated to ${status}`);
+      setMessage(`✅ Booking status updated to ${status}`);
+      fetchBookings();
     } catch (err) {
-      console.error("Failed to update status:", err);
-      setMessage("❌ Failed to update booking status");
+      setMessage(err.response?.data?.message || "❌ Failed to update status");
     }
   };
 
-  // Mark as paid
+  // ✅ Mark as Paid
   const markAsPaid = async (id) => {
-    const secretKey = import.meta.env.VITE_ADMIN_SECRET;
-    if (!secretKey) return alert("⚠️ VITE_ADMIN_SECRET not set in .env");
-
     try {
       const res = await axios.patch(
         `${API_BASE_URL}/api/bookings/${id}/pay`,
         {},
-        {
-          headers: { "x-admin-secret": secretKey },
-        }
-      );
-      setBookings((prev) =>
-        prev.map((b) => (b._id === id ? { ...b, paid: true } : b))
+        { headers: { "x-admin-secret": ADMIN_SECRET } }
       );
       setMessage(res.data.message || "✅ Marked as paid");
+      fetchBookings();
     } catch (err) {
-      console.error("Failed to mark as paid:", err);
-      setMessage("❌ Failed to mark as paid");
+      setMessage(err.response?.data?.message || "❌ Failed to mark as paid");
     }
   };
 
-  // Delete booking
+  // ✅ Delete booking
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this booking?")) return;
-
-    const secretKey = import.meta.env.VITE_ADMIN_SECRET;
-    if (!secretKey) return alert("⚠️ VITE_ADMIN_SECRET not set in .env");
-
     try {
       await axios.delete(`${API_BASE_URL}/api/bookings/${id}`, {
-        headers: { "x-admin-secret": secretKey },
+        headers: { "x-admin-secret": ADMIN_SECRET },
       });
       setBookings((prev) => prev.filter((b) => b._id !== id));
-      setMessage("🗑️ Booking deleted successfully");
+      setMessage("🗑️ Booking deleted");
     } catch (err) {
-      console.error("Failed to delete booking:", err);
-      setMessage("❌ Failed to delete booking");
+      setMessage(err.response?.data?.message || "❌ Failed to delete booking");
     }
   };
 
-  return (
-    <div style={{ padding: 20 }}>
-      <h2>📋 Bookings (Admin)</h2>
-      {message && <p style={{ color: "green" }}>{message}</p>}
+  // ✅ Export Excel
+  const exportToExcel = () => {
+    const exportData = bookings.map((b) => ({
+      Customer: b.customer?.name || "N/A",
+      "Customer Phone": b.customer?.phone || "N/A",
+      Provider: b.provider?.name || "N/A",
+      "Provider Phone": b.provider?.phone || "N/A",
+      Date: new Date(b.date).toLocaleDateString(),
+      Status: b.status,
+      Paid: b.paid ? "Yes" : "No",
+    }));
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Service Bookings");
+    XLSX.writeFile(wb, "service_bookings.xlsx");
+  };
 
-      {loading ? (
-        <p>⏳ Loading bookings...</p>
-      ) : bookings.length === 0 ? (
-        <p>No bookings found.</p>
+  useEffect(() => {
+    fetchBookings();
+  }, []);
+
+  // ✅ Search + Filter
+  const filteredBookings = bookings.filter((b) => {
+    const matchesSearch =
+      b.customer?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      b.provider?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      b.customer?.phone?.includes(searchTerm) ||
+      b.provider?.phone?.includes(searchTerm);
+
+    const matchesStatus = statusFilter ? b.status === statusFilter : true;
+    const matchesPayment = paymentFilter
+      ? paymentFilter === "paid"
+        ? b.paid
+        : !b.paid
+      : true;
+
+    return matchesSearch && matchesStatus && matchesPayment;
+  });
+
+  return (
+    <div className="admin-bookings-container">
+      <h2>🧾 Service Bookings (Admin)</h2>
+      {message && <p className="message">{message}</p>}
+
+      {/* ✅ Filters & Search */}
+      <div className="top-controls">
+        <input
+          type="text"
+          placeholder="🔍 Search by customer, provider, or phone..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+        >
+          <option value="">All Statuses</option>
+          <option value="request">Request</option>
+          <option value="confirmed">Confirmed</option>
+          <option value="processing">Processing</option>
+          <option value="completed">Completed</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+        <select
+          value={paymentFilter}
+          onChange={(e) => setPaymentFilter(e.target.value)}
+        >
+          <option value="">All Payments</option>
+          <option value="paid">Paid</option>
+          <option value="unpaid">Unpaid</option>
+        </select>
+        <button onClick={exportToExcel}>📊 Export Excel</button>
+      </div>
+
+      {/* ✅ Table Section */}
+      {filteredBookings.length === 0 ? (
+        <p>No service bookings found</p>
       ) : (
         <>
-          {/* Desktop Table */}
-          {windowWidth >= 768 && (
-            <div style={{ overflowX: "auto" }}>
-              <table
-                style={{
-                  width: "100%",
-                  borderCollapse: "collapse",
-                  fontSize: "0.85rem",
-                }}
-              >
-                <thead>
-                  <tr>
-                    <th>Customer</th>
-                    <th>Customer Phone</th>
-                    <th>Provider</th>
-                    <th>Provider Phone</th>
-                    <th>Date</th>
-                    <th>Status</th>
-                    <th>Paid</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {bookings.map((b) => (
-                    <tr key={b._id} style={{ borderBottom: "1px solid #ccc" }}>
-                      <td>{b.customer?.name || "N/A"}</td>
-                      <td>{b.customer?.phone || "N/A"}</td>
-                      <td>{b.provider?.name || "N/A"}</td>
-                      <td>{b.provider?.phone || "N/A"}</td>
-                      <td>{new Date(b.date).toLocaleDateString()}</td>
-                      <td>
-                        {b.status === "request" ? (
-                          <span style={{ color: "gray", fontStyle: "italic" }}>
-                            Waiting for provider
-                          </span>
-                        ) : ["confirmed", "processing"].includes(b.status) ? (
-                          <select
-                            value={b.status}
-                            onChange={(e) =>
-                              handleStatusChange(b._id, e.target.value)
-                            }
-                          >
-                            <option value="confirmed">Confirmed</option>
-                            <option value="processing">Processing</option>
-                            <option value="completed">Completed</option>
-                          </select>
-                        ) : (
-                          b.status
-                        )}
-                      </td>
-                      <td>{b.paid ? "✅ Yes" : "❌ No"}</td>
-                      <td>
-                        {!b.paid && (
-                          <button onClick={() => markAsPaid(b._id)}>💰</button>
-                        )}
-                        <button
-                          onClick={() => handleDelete(b._id)}
-                          style={{
-                            marginLeft: 5,
-                            backgroundColor: "red",
-                            color: "white",
-                          }}
-                        >
-                          🗑️
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {/* Mobile Cards */}
-          {windowWidth < 768 && (
-            <div style={{ marginTop: 20 }}>
-              {bookings.map((b) => (
-                <div
-                  key={b._id}
-                  style={{
-                    border: "1px solid #ccc",
-                    borderRadius: 8,
-                    padding: 10,
-                    marginBottom: 10,
-                    fontSize: "0.85rem",
-                  }}
-                >
-                  <p>
-                    <strong>Customer:</strong> {b.customer?.name || "N/A"}
-                  </p>
-                  <p>
-                    <strong>Customer Phone:</strong> {b.customer?.phone || "N/A"}
-                  </p>
-                  <p>
-                    <strong>Provider:</strong> {b.provider?.name || "N/A"} (
-                    {b.provider?.phone || "N/A"} )
-                  </p>
-                  <p>
-                    <strong>Date:</strong> {new Date(b.date).toLocaleDateString()}
-                  </p>
-                  <p>
-                    <strong>Status:</strong>{" "}
-                    {b.status === "request" ? (
-                      <span style={{ color: "gray", fontStyle: "italic" }}>
-                        Waiting for provider
-                      </span>
-                    ) : ["confirmed", "processing"].includes(b.status) ? (
-                      <select
-                        value={b.status}
-                        onChange={(e) =>
-                          handleStatusChange(b._id, e.target.value)
-                        }
-                      >
-                        <option value="confirmed">Confirmed</option>
-                        <option value="processing">Processing</option>
-                        <option value="completed">Completed</option>
-                      </select>
+          <table className="bookings-table">
+            <thead>
+              <tr>
+                <th>Customer</th>
+                <th>Customer Phone</th>
+                <th>Provider</th>
+                <th>Provider Phone</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Payment</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredBookings.slice(0, visibleCount).map((b) => (
+                <tr key={b._id} className={`status-${b.status}`}>
+                  <td>{b.customer?.name || "N/A"}</td>
+                  <td>{b.customer?.phone || "N/A"}</td>
+                  <td>{b.provider?.name || "N/A"}</td>
+                  <td>{b.provider?.phone || "N/A"}</td>
+                  <td>{new Date(b.date).toLocaleDateString()}</td>
+                  <td>
+                    <select
+                      value={b.status}
+                      onChange={(e) =>
+                        handleStatusChange(b._id, e.target.value)
+                      }
+                    >
+                      <option value="request">Request</option>
+                      <option value="confirmed">Confirmed</option>
+                      <option value="processing">Processing</option>
+                      <option value="completed">Completed</option>
+                      <option value="cancelled">Cancelled</option>
+                    </select>
+                  </td>
+                  <td>
+                    {b.paid ? (
+                      <span className="paid">✅ Paid</span>
                     ) : (
-                      b.status
+                      <>
+                        <span className="unpaid">❌ Unpaid</span>
+                        <button
+                          onClick={() => markAsPaid(b._id)}
+                          className="btn btn-pay"
+                        >
+                          💰 Mark Paid
+                        </button>
+                      </>
                     )}
-                  </p>
-                  <p>
-                    <strong>Paid:</strong> {b.paid ? "✅ Yes" : "❌ No"}
-                  </p>
-                  <div>
-                    {!b.paid && (
-                      <button onClick={() => markAsPaid(b._id)}>💰 Mark Paid</button>
-                    )}
+                  </td>
+                  <td>
                     <button
                       onClick={() => handleDelete(b._id)}
-                      style={{
-                        marginLeft: 5,
-                        backgroundColor: "red",
-                        color: "white",
-                      }}
+                      className="delete-btn"
                     >
                       🗑️ Delete
                     </button>
-                  </div>
-                </div>
+                  </td>
+                </tr>
               ))}
+            </tbody>
+          </table>
+
+          {visibleCount < filteredBookings.length && (
+            <div className="load-more">
+              <button onClick={() => setVisibleCount((c) => c + 10)}>
+                ⬇️ Load More
+              </button>
             </div>
           )}
         </>
       )}
     </div>
-  )
+  );
 };
 
 export default AdminBookings;
