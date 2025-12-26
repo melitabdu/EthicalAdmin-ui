@@ -3,18 +3,18 @@ import { io } from "socket.io-client";
 const SOCKET_URL =
   import.meta.env.MODE === "development"
     ? "http://localhost:5000"
-    : "https://home-service-backend-3qy2.onrender.com";
+    : import.meta.env.VITE_API_BASE_URL;   // ⬅ auto-uses Railway URL
 
 const socket = io(SOCKET_URL, {
-  transports: ["websocket"],
-  withCredentials: true,   // ✅ VERY IMPORTANT
+  transports: ["websocket"],   // ⬅ NO POLLING IN PRODUCTION
+  withCredentials: true,
   reconnection: true,
-  reconnectionAttempts: 10,
-  reconnectionDelay: 1000,
+  reconnectionAttempts: Infinity,  // ⬅ Stable auto-reconnect
+  reconnectionDelay: 500,          // ⬅ Faster reconnect
 });
 
 socket.on("connect", () => {
-  console.log("✅ Connected to Socket:", socket.id);
+  console.log("✅ Socket connected:", socket.id);
 });
 
 socket.on("disconnect", () => {

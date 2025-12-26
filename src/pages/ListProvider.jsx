@@ -1,13 +1,12 @@
 // src/pages/ListProvider.jsx
 import React, { useEffect, useState } from "react";
-import axios from "axios"; // Axios instance per file
+import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "./ListProvider.css";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL; // dynamic backend
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const ListProvider = () => {
-  // ✅ get token from localStorage instead of context
   const token = localStorage.getItem("adminToken");
 
   const [providers, setProviders] = useState([]);
@@ -15,7 +14,6 @@ const ListProvider = () => {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  // Axios instance with baseURL and auth header
   const api = axios.create({
     baseURL: `${API_BASE_URL}/api`,
     headers: { Authorization: `Bearer ${token}` },
@@ -58,6 +56,11 @@ const ListProvider = () => {
     }
   };
 
+  const handleCopyLink = (slug) => {
+    navigator.clipboard.writeText(`${API_BASE_URL}/p/${slug}`);
+    alert("✅ Link copied to clipboard!");
+  };
+
   return (
     <div className="list-providers-fullpage">
       <button className="back-btn" onClick={() => navigate(-1)}>
@@ -85,6 +88,8 @@ const ListProvider = () => {
                   <th>Description</th>
                   <th>Price</th>
                   <th>Phone</th>
+                  <th>Password</th>
+                  <th>Slug (Public Link)</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -105,6 +110,28 @@ const ListProvider = () => {
                       <td>{p.description || "N/A"}</td>
                       <td>{p.priceEstimate || "N/A"}</td>
                       <td>{p.phone}</td>
+                      <td>{p.password || "N/A"}</td>
+                      <td>
+                        {p.slug ? (
+                          <>
+                            <a
+                              href={`${API_BASE_URL}/p/${p.slug}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              {p.slug}
+                            </a>
+                            <button
+                              onClick={() => handleCopyLink(p.slug)}
+                              className="copy-btn"
+                            >
+                              📋 Copy
+                            </button>
+                          </>
+                        ) : (
+                          "N/A"
+                        )}
+                      </td>
                       <td>
                         <button className="edit-btn">✏️ Edit</button>
                         <button
@@ -140,6 +167,31 @@ const ListProvider = () => {
                   </p>
                   <p>
                     <strong>Phone:</strong> {p.phone}
+                  </p>
+                  <p>
+                    <strong>Password:</strong> {p.password || "N/A"}
+                  </p>
+                  <p>
+                    <strong>Slug:</strong>{" "}
+                    {p.slug ? (
+                      <>
+                        <a
+                          href={`${API_BASE_URL}/p/${p.slug}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {p.slug}
+                        </a>
+                        <button
+                          onClick={() => handleCopyLink(p.slug)}
+                          className="copy-btn"
+                        >
+                          📋 Copy
+                        </button>
+                      </>
+                    ) : (
+                      "N/A"
+                    )}
                   </p>
                   <div className="card-actions">
                     <button className="edit-btn">✏️ Edit</button>

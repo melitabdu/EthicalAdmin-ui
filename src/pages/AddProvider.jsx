@@ -1,12 +1,10 @@
-// src/pages/AddProvider.jsx
 import React, { useState } from 'react';
 import axios from 'axios';
 import './AddProvider.css';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL; // ✅ dynamic backend
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const AddProvider = () => {
-  // ✅ Get token directly from localStorage (no context)
   const token = localStorage.getItem('adminToken');
 
   const [form, setForm] = useState({
@@ -21,22 +19,20 @@ const AddProvider = () => {
   const [photo, setPhoto] = useState(null);
   const [preview, setPreview] = useState(null);
   const [message, setMessage] = useState('');
+  const [addedProvider, setAddedProvider] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // ✅ Handle text/number/select input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    setForm(prev => ({ ...prev, [name]: value }));
   };
 
-  // ✅ Handle photo upload + preview
   const handlePhotoChange = (e) => {
     const file = e.target.files[0];
     setPhoto(file);
     if (file) setPreview(URL.createObjectURL(file));
   };
 
-  // ✅ Handle form submit
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -47,25 +43,24 @@ const AddProvider = () => {
 
     setLoading(true);
     try {
-      // ✅ Axios instance for this component
       const api = axios.create({
         baseURL: `${API_BASE_URL}/api`,
         headers: { Authorization: `Bearer ${token}` },
       });
 
       const formData = new FormData();
-      Object.entries(form).forEach(([key, value]) => {
-        formData.append(key, value);
-      });
+      Object.entries(form).forEach(([key, value]) => formData.append(key, value));
       if (photo) formData.append('photo', photo);
 
       const res = await api.post('/admin/add-provider', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
-      setMessage(`✅ Provider "${res.data.provider.name}" added successfully`);
+      const provider = res.data;
+      setAddedProvider(provider);
+      setMessage(`✅ Provider "${provider.name}" added successfully`);
 
-      // ✅ Reset form + preview
+      // Reset form
       setForm({
         name: '',
         phone: '',
@@ -78,9 +73,8 @@ const AddProvider = () => {
       setPreview(null);
     } catch (err) {
       console.error(err);
-      setMessage(
-        `❌ Error: ${err.response?.data?.message || 'Something went wrong'}`
-      );
+      setMessage(`❌ Error: ${err.response?.data?.message || 'Something went wrong'}`);
+      setAddedProvider(null);
     } finally {
       setLoading(false);
     }
@@ -90,6 +84,31 @@ const AddProvider = () => {
     <div className="add-provider-container">
       <h2>Add Provider</h2>
       {message && <p className="form-message">{message}</p>}
+
+      {addedProvider && (
+        <div className="added-provider-info">
+          <p>
+            <strong>Slug (Public Link):</strong>{' '}
+            <a
+              href={`${API_BASE_URL}/p/${addedProvider.slug}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {addedProvider.slug}
+            </a>
+          </p>
+          <button
+            onClick={() =>
+              navigator.clipboard.writeText(`${API_BASE_URL}/p/${addedProvider.slug}`)
+            }
+          >
+            Copy Link
+          </button>
+          <p>
+            <strong>Password:</strong> {addedProvider.password}
+          </p>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="add-provider-form" autoComplete="off">
         <label>Name:</label>
@@ -134,7 +153,7 @@ const AddProvider = () => {
 
         <label>Password:</label>
         <input
-          type="password"
+          type="text"
           name="password"
           value={form.password}
           onChange={handleChange}
@@ -144,13 +163,7 @@ const AddProvider = () => {
 
         <label>Photo:</label>
         <input type="file" onChange={handlePhotoChange} accept="image/*" required />
-        {preview && (
-          <img
-            src={preview}
-            alt="Preview"
-            style={{ width: '60px', marginTop: '10px' }}
-          />
-        )}
+        {preview && <img src={preview} alt="Preview" style={{ width: '60px', marginTop: '10px' }} />}
 
         <button type="submit" disabled={loading}>
           {loading ? 'Adding...' : 'Add Provider'}
