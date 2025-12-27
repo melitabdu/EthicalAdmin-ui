@@ -15,22 +15,15 @@ const ListProvider = () => {
   const navigate = useNavigate();
 
   const api = axios.create({
-    baseURL: `${API_BASE_URL}/api`,
+    baseURL: `${API_BASE_URL}/api/providers`,
     headers: { Authorization: `Bearer ${token}` },
   });
 
   useEffect(() => {
     const fetchProviders = async () => {
       try {
-        const res = await api.get("/admin/providers");
-        console.log("✅ Providers API Response:", res.data);
-
-        const data =
-          res.data.providers ||
-          res.data.data ||
-          (Array.isArray(res.data) ? res.data : []);
-
-        setProviders(data);
+        const res = await api.get("/");
+        setProviders(Array.isArray(res.data) ? res.data : []);
         setError("");
       } catch (err) {
         console.error("❌ Failed to fetch providers:", err);
@@ -47,7 +40,7 @@ const ListProvider = () => {
     if (!window.confirm("Delete this provider?")) return;
 
     try {
-      await api.delete(`/admin/provider/${id}`);
+      await api.delete(`/${id}`);
       setProviders((prev) => prev.filter((p) => p._id !== id));
       alert("✅ Provider deleted successfully");
     } catch (err) {
@@ -58,7 +51,7 @@ const ListProvider = () => {
 
   const handleCopyLink = (slug) => {
     navigator.clipboard.writeText(`${API_BASE_URL}/p/${slug}`);
-    alert("✅ Link copied to clipboard!");
+    alert("✅ Public link copied!");
   };
 
   return (
@@ -73,7 +66,7 @@ const ListProvider = () => {
         <p>⏳ Loading providers...</p>
       ) : error ? (
         <p style={{ color: "red" }}>{error}</p>
-      ) : !Array.isArray(providers) || providers.length === 0 ? (
+      ) : providers.length === 0 ? (
         <p>No providers found.</p>
       ) : (
         <>
@@ -88,123 +81,58 @@ const ListProvider = () => {
                   <th>Description</th>
                   <th>Price</th>
                   <th>Phone</th>
-                  <th>Password</th>
-                  <th>Slug (Public Link)</th>
+                  <th>Public Link</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {providers.map((p) => {
-                  const photoURL = p.photo || "/default.png";
-                  return (
-                    <tr key={p._id}>
-                      <td>
-                        <img
-                          src={photoURL}
-                          alt={p.name}
-                          className="provider-photo-small"
-                        />
-                      </td>
-                      <td>{p.name}</td>
-                      <td>{p.serviceCategory || "N/A"}</td>
-                      <td>{p.description || "N/A"}</td>
-                      <td>{p.priceEstimate || "N/A"}</td>
-                      <td>{p.phone}</td>
-                      <td>{p.password || "N/A"}</td>
-                      <td>
-                        {p.slug ? (
-                          <>
-                            <a
-                              href={`${API_BASE_URL}/p/${p.slug}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              {p.slug}
-                            </a>
-                            <button
-                              onClick={() => handleCopyLink(p.slug)}
-                              className="copy-btn"
-                            >
-                              📋 Copy
-                            </button>
-                          </>
-                        ) : (
-                          "N/A"
-                        )}
-                      </td>
-                      <td>
-                        <button className="edit-btn">✏️ Edit</button>
-                        <button
-                          onClick={() => handleDelete(p._id)}
-                          className="delete-btn"
-                        >
-                          🗑 Delete
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
+                {providers.map((p) => (
+                  <tr key={p._id}>
+                    <td>
+                      <img
+                        src={p.photo || "/default.png"}
+                        alt={p.name}
+                        className="provider-photo-small"
+                      />
+                    </td>
+                    <td>{p.name}</td>
+                    <td>{p.serviceCategory}</td>
+                    <td>{p.description}</td>
+                    <td>{p.priceEstimate}</td>
+                    <td>{p.phone}</td>
+                    <td>
+                      {p.slug ? (
+                        <>
+                          <a
+                            href={`${API_BASE_URL}/p/${p.slug}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            /p/{p.slug}
+                          </a>
+                          <button
+                            onClick={() => handleCopyLink(p.slug)}
+                            className="copy-btn"
+                          >
+                            📋
+                          </button>
+                        </>
+                      ) : (
+                        "N/A"
+                      )}
+                    </td>
+                    <td>
+                      <button
+                        onClick={() => handleDelete(p._id)}
+                        className="delete-btn"
+                      >
+                        🗑 Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
-          </div>
-
-          {/* 📱 Mobile Card Layout */}
-          <div className="mobile-card-container">
-            {providers.map((p) => {
-              const photoURL = p.photo || "/default.png";
-              return (
-                <div key={p._id} className="provider-card">
-                  <img src={photoURL} alt={p.name} className="provider-photo" />
-                  <h3>{p.name}</h3>
-                  <p>
-                    <strong>Category:</strong> {p.serviceCategory || "N/A"}
-                  </p>
-                  <p>
-                    <strong>Description:</strong> {p.description || "N/A"}
-                  </p>
-                  <p>
-                    <strong>Price:</strong> {p.priceEstimate || "N/A"}
-                  </p>
-                  <p>
-                    <strong>Phone:</strong> {p.phone}
-                  </p>
-                  <p>
-                    <strong>Password:</strong> {p.password || "N/A"}
-                  </p>
-                  <p>
-                    <strong>Slug:</strong>{" "}
-                    {p.slug ? (
-                      <>
-                        <a
-                          href={`${API_BASE_URL}/p/${p.slug}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          {p.slug}
-                        </a>
-                        <button
-                          onClick={() => handleCopyLink(p.slug)}
-                          className="copy-btn"
-                        >
-                          📋 Copy
-                        </button>
-                      </>
-                    ) : (
-                      "N/A"
-                    )}
-                  </p>
-                  <div className="card-actions">
-                    <button className="edit-btn">✏️ Edit</button>
-                    <button
-                      onClick={() => handleDelete(p._id)}
-                      className="delete-btn"
-                    >
-                      🗑 Delete
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
           </div>
         </>
       )}

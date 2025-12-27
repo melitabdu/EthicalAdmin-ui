@@ -1,30 +1,31 @@
-import React, { useState } from 'react';
-import axios from 'axios';
-import './AddProvider.css';
+// src/pages/AddProvider.jsx
+import React, { useState } from "react";
+import axios from "axios";
+import "./AddProvider.css";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const AddProvider = () => {
-  const token = localStorage.getItem('adminToken');
+  const token = localStorage.getItem("adminToken");
 
   const [form, setForm] = useState({
-    name: '',
-    phone: '',
-    serviceCategory: '',
-    description: '',
-    priceEstimate: '',
-    password: '',
+    name: "",
+    phone: "",
+    serviceCategory: "",
+    description: "",
+    priceEstimate: "",
+    password: "",
   });
 
   const [photo, setPhoto] = useState(null);
   const [preview, setPreview] = useState(null);
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState("");
   const [addedProvider, setAddedProvider] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const handlePhotoChange = (e) => {
@@ -37,44 +38,53 @@ const AddProvider = () => {
     e.preventDefault();
 
     if (!token) {
-      setMessage('❌ Admin authentication token is missing');
+      setMessage("❌ Admin authentication missing");
       return;
     }
 
     setLoading(true);
+    setMessage("");
+    setAddedProvider(null);
+
     try {
-      const api = axios.create({
-        baseURL: `${API_BASE_URL}/api`,
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
       const formData = new FormData();
-      Object.entries(form).forEach(([key, value]) => formData.append(key, value));
-      if (photo) formData.append('photo', photo);
 
-      const res = await api.post('/admin/add-provider', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+      Object.entries(form).forEach(([key, value]) => {
+        formData.append(key, value.trim());
       });
 
-      const provider = res.data;
-      setAddedProvider(provider);
-      setMessage(`✅ Provider "${provider.name}" added successfully`);
+      if (photo) formData.append("photo", photo);
+
+      const res = await axios.post(
+        `${API_BASE_URL}/api/providers`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      setAddedProvider(res.data);
+      setMessage(`✅ Provider "${res.data.name}" added successfully`);
 
       // Reset form
       setForm({
-        name: '',
-        phone: '',
-        serviceCategory: '',
-        description: '',
-        priceEstimate: '',
-        password: '',
+        name: "",
+        phone: "",
+        serviceCategory: "",
+        description: "",
+        priceEstimate: "",
+        password: "",
       });
       setPhoto(null);
       setPreview(null);
     } catch (err) {
       console.error(err);
-      setMessage(`❌ Error: ${err.response?.data?.message || 'Something went wrong'}`);
-      setAddedProvider(null);
+      setMessage(
+        `❌ Error: ${err.response?.data?.message || "Something went wrong"}`
+      );
     } finally {
       setLoading(false);
     }
@@ -82,42 +92,47 @@ const AddProvider = () => {
 
   return (
     <div className="add-provider-container">
-      <h2>Add Provider</h2>
+      <h2>➕ Add Provider</h2>
+
       {message && <p className="form-message">{message}</p>}
 
       {addedProvider && (
         <div className="added-provider-info">
           <p>
-            <strong>Slug (Public Link):</strong>{' '}
+            <strong>Public Link:</strong>{" "}
             <a
               href={`${API_BASE_URL}/p/${addedProvider.slug}`}
               target="_blank"
               rel="noopener noreferrer"
             >
-              {addedProvider.slug}
+              /p/{addedProvider.slug}
             </a>
           </p>
+
           <button
             onClick={() =>
-              navigator.clipboard.writeText(`${API_BASE_URL}/p/${addedProvider.slug}`)
+              navigator.clipboard.writeText(
+                `${API_BASE_URL}/p/${addedProvider.slug}`
+              )
             }
           >
-            Copy Link
+            📋 Copy Link
           </button>
+
           <p>
-            <strong>Password:</strong> {addedProvider.password}
+            <strong>Provider Password:</strong> {addedProvider.password}
           </p>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="add-provider-form" autoComplete="off">
-        <label>Name:</label>
+      <form onSubmit={handleSubmit} className="add-provider-form">
+        <label>Name</label>
         <input name="name" value={form.name} onChange={handleChange} required />
 
-        <label>Phone:</label>
+        <label>Phone</label>
         <input name="phone" value={form.phone} onChange={handleChange} required />
 
-        <label>Service Category:</label>
+        <label>Service Category</label>
         <select
           name="serviceCategory"
           value={form.serviceCategory}
@@ -133,7 +148,7 @@ const AddProvider = () => {
           <option value="Other Services">Other Services</option>
         </select>
 
-        <label>Description:</label>
+        <label>Description</label>
         <textarea
           name="description"
           value={form.description}
@@ -141,7 +156,7 @@ const AddProvider = () => {
           required
         />
 
-        <label>Price Estimate (per day):</label>
+        <label>Price Estimate (per day)</label>
         <input
           type="number"
           name="priceEstimate"
@@ -151,7 +166,7 @@ const AddProvider = () => {
           min="0"
         />
 
-        <label>Password:</label>
+        <label>Password</label>
         <input
           type="text"
           name="password"
@@ -161,12 +176,18 @@ const AddProvider = () => {
           autoComplete="new-password"
         />
 
-        <label>Photo:</label>
-        <input type="file" onChange={handlePhotoChange} accept="image/*" required />
-        {preview && <img src={preview} alt="Preview" style={{ width: '60px', marginTop: '10px' }} />}
+        <label>Photo</label>
+        <input type="file" accept="image/*" onChange={handlePhotoChange} />
+        {preview && (
+          <img
+            src={preview}
+            alt="Preview"
+            style={{ width: 60, marginTop: 10 }}
+          />
+        )}
 
         <button type="submit" disabled={loading}>
-          {loading ? 'Adding...' : 'Add Provider'}
+          {loading ? "Adding..." : "Add Provider"}
         </button>
       </form>
     </div>
