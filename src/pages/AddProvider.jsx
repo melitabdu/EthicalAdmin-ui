@@ -8,13 +8,14 @@ const FRONTEND_URL = import.meta.env.VITE_FRONTEND_URL;
 const AddProvider = () => {
   const token = localStorage.getItem('adminToken');
 
+  // Form state
   const [form, setForm] = useState({
     name: '',
     phone: '',
     serviceCategory: '',
     description: '',
     priceEstimate: '',
-    password: '',
+    password: '', // NEW provider password (not admin)
   });
 
   const [photo, setPhoto] = useState(null);
@@ -23,24 +24,29 @@ const AddProvider = () => {
   const [addedProvider, setAddedProvider] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  // Input change handler
   const handleChange = (e) => {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
+  // Photo upload handler
   const handlePhotoChange = (e) => {
     const file = e.target.files[0];
     setPhoto(file);
     if (file) setPreview(URL.createObjectURL(file));
   };
 
+  // Form submit
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (!token) {
       setMessage('❌ Admin token missing');
       return;
     }
 
     setLoading(true);
+
     try {
       const formData = new FormData();
       Object.entries(form).forEach(([k, v]) => formData.append(k, v));
@@ -57,23 +63,29 @@ const AddProvider = () => {
         }
       );
 
-      setAddedProvider(res.data);
-      setMessage(`✅ Provider "${res.data.name}" added successfully`);
+      // ✅ Correct: use provider from backend
+      setAddedProvider(res.data.provider);
 
+      // ✅ Show a message
+      setMessage(`✅ Provider "${res.data.provider.name}" added successfully`);
+
+      console.log('✅ Provider slug:', res.data.provider.slug);
+
+      // Reset form
       setForm({
         name: '',
         phone: '',
         serviceCategory: '',
         description: '',
         priceEstimate: '',
-        password: '',
+        password: '', // keep it empty
       });
       setPhoto(null);
       setPreview(null);
 
     } catch (err) {
       console.error(err);
-      setMessage('❌ Failed to add provider');
+      setMessage(err.response?.data?.message || '❌ Failed to add provider');
     } finally {
       setLoading(false);
     }
@@ -82,14 +94,15 @@ const AddProvider = () => {
   return (
     <div className="add-provider-container">
       <h2>Add Provider</h2>
+
       {message && <p className="form-message">{message}</p>}
 
+      {/* ✅ Display public link & temporary provider password */}
       {addedProvider && (
         <div className="added-provider-info">
           <p>
             <strong>Public Link:</strong>
           </p>
-
           <a
             href={`${FRONTEND_URL}/p/${addedProvider.slug}`}
             target="_blank"
@@ -108,28 +121,76 @@ const AddProvider = () => {
             📋 Copy Link
           </button>
 
+          {/* ✅ Show the provider password ONCE from frontend state */}
           <p>
-            <strong>Provider Password:</strong> {addedProvider.password}
+            <strong>Provider Password (share securely):</strong>{" "}
+            <span style={{ color: "red" }}>{form.password || "••••••"}</span>
           </p>
         </div>
       )}
 
+      {/* Form */}
       <form onSubmit={handleSubmit} className="add-provider-form">
-        <input name="name" value={form.name} onChange={handleChange} placeholder="Name" required />
-        <input name="phone" value={form.phone} onChange={handleChange} placeholder="Phone" required />
+        <input
+          name="name"
+          value={form.name}
+          onChange={handleChange}
+          placeholder="Name"
+          required
+        />
 
-        <select name="serviceCategory" value={form.serviceCategory} onChange={handleChange} required>
+        <input
+          name="phone"
+          value={form.phone}
+          onChange={handleChange}
+          placeholder="Phone"
+          required
+        />
+
+        <select
+          name="serviceCategory"
+          value={form.serviceCategory}
+          onChange={handleChange}
+          required
+        >
           <option value="">Select Category</option>
           <option value="Cleaning">Cleaning</option>
           <option value="Electricity">Electricity</option>
           <option value="Plumbing">Plumbing</option>
         </select>
 
-        <textarea name="description" value={form.description} onChange={handleChange} placeholder="Description" required />
-        <input type="number" name="priceEstimate" value={form.priceEstimate} onChange={handleChange} placeholder="Price" required />
-        <input name="password" value={form.password} onChange={handleChange} placeholder="Password" required />
+        <textarea
+          name="description"
+          value={form.description}
+          onChange={handleChange}
+          placeholder="Description"
+          required
+        />
 
-        <input type="file" accept="image/*" onChange={handlePhotoChange} required />
+        <input
+          type="number"
+          name="priceEstimate"
+          value={form.priceEstimate}
+          onChange={handleChange}
+          placeholder="Price Estimate"
+          required
+        />
+
+        <input
+          type="password"
+          name="password"
+          value={form.password}
+          onChange={handleChange}
+          placeholder="New Provider Password"
+          required
+        />
+
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handlePhotoChange}
+          required
+        />
         {preview && <img src={preview} alt="preview" width="60" />}
 
         <button disabled={loading}>
