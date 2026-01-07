@@ -39,6 +39,12 @@ export default function SidebarLayout() {
               </Link>
             </li>
             <li>
+              <Link to="/admin/users" onClick={() => setSidebarOpen(false)}>
+                Users
+              </Link>
+            </li>
+
+            <li>
               <Link to="/admin/owners" onClick={() => setSidebarOpen(false)}>
                 Rental Owners
               </Link>

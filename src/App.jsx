@@ -14,6 +14,7 @@ import AdminVideoManager from "./pages/AdVideoManager";
 
 import AdminBookings from "./pages/AdminBookings";
 import AdminRentalBookings from "./pages/AdminRentalBookings";
+import AdminUserList from "./pages/AdminUserList";
 
 // Components
 import SidebarLayout from "./components/SidebarLayout";
@@ -48,6 +49,8 @@ const App = () => {
           {/* Properties */}
           <Route path="properties" element={<AdminPropertyList />} />
           <Route path="add-property" element={<AddProperty />} />
+          <Route path="users" element={<AdminUserList />} />
+
 
           {/* Unavailable dates */}
           
