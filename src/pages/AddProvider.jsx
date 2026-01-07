@@ -2,11 +2,8 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import './AddProvider.css';
 
-/* Backend API (DATA only) */
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-
-/* Frontend URL (PUBLIC LINKS) */
-const FRONTEND_URL = 'https://frontend-user-ui.vercel.app';
+const FRONTEND_URL = import.meta.env.VITE_FRONTEND_URL;
 
 const AddProvider = () => {
   const token = localStorage.getItem('adminToken');
@@ -27,8 +24,7 @@ const AddProvider = () => {
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handlePhotoChange = (e) => {
@@ -39,38 +35,31 @@ const AddProvider = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!token) {
-      setMessage('❌ Admin authentication token is missing');
+      setMessage('❌ Admin token missing');
       return;
     }
 
     setLoading(true);
-    setMessage('');
-
     try {
-      const api = axios.create({
-        baseURL: `${API_BASE_URL}/api`,
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
       const formData = new FormData();
-      Object.entries(form).forEach(([key, value]) =>
-        formData.append(key, value)
-      );
+      Object.entries(form).forEach(([k, v]) => formData.append(k, v));
       if (photo) formData.append('photo', photo);
 
-      const res = await api.post('/admin/add-provider', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      const res = await axios.post(
+        `${API_BASE_URL}/api/admin/add-provider`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      );
 
-      // ✅ backend should return provider object
-      const provider = res.data?.provider || res.data;
+      setAddedProvider(res.data);
+      setMessage(`✅ Provider "${res.data.name}" added successfully`);
 
-      setAddedProvider(provider);
-      setMessage(`✅ Provider "${provider.name}" added successfully`);
-
-      // reset form
       setForm({
         name: '',
         phone: '',
@@ -81,14 +70,10 @@ const AddProvider = () => {
       });
       setPhoto(null);
       setPreview(null);
+
     } catch (err) {
       console.error(err);
-      setMessage(
-        `❌ Error: ${
-          err.response?.data?.message || 'Something went wrong'
-        }`
-      );
-      setAddedProvider(null);
+      setMessage('❌ Failed to add provider');
     } finally {
       setLoading(false);
     }
@@ -97,22 +82,21 @@ const AddProvider = () => {
   return (
     <div className="add-provider-container">
       <h2>Add Provider</h2>
-
       {message && <p className="form-message">{message}</p>}
 
-      {/* ✅ Show public link AFTER provider is created */}
-      {addedProvider && addedProvider.slug && (
+      {addedProvider && (
         <div className="added-provider-info">
           <p>
-            <strong>Public Provider Link:</strong>{' '}
-            <a
-              href={`${FRONTEND_URL}/p/${addedProvider.slug}`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {FRONTEND_URL}/p/{addedProvider.slug}
-            </a>
+            <strong>Public Link:</strong>
           </p>
+
+          <a
+            href={`${FRONTEND_URL}/p/${addedProvider.slug}`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {FRONTEND_URL}/p/{addedProvider.slug}
+          </a>
 
           <button
             onClick={() =>
@@ -130,90 +114,25 @@ const AddProvider = () => {
         </div>
       )}
 
-      <form
-        onSubmit={handleSubmit}
-        className="add-provider-form"
-        autoComplete="off"
-      >
-        <label>Name:</label>
-        <input
-          name="name"
-          value={form.name}
-          onChange={handleChange}
-          required
-        />
+      <form onSubmit={handleSubmit} className="add-provider-form">
+        <input name="name" value={form.name} onChange={handleChange} placeholder="Name" required />
+        <input name="phone" value={form.phone} onChange={handleChange} placeholder="Phone" required />
 
-        <label>Phone:</label>
-        <input
-          name="phone"
-          value={form.phone}
-          onChange={handleChange}
-          required
-        />
-
-        <label>Service Category:</label>
-        <select
-          name="serviceCategory"
-          value={form.serviceCategory}
-          onChange={handleChange}
-          required
-        >
-          <option value="">-- Select --</option>
-          <option value="Finishing Works">Finishing Works</option>
-          <option value="Party Food Preparation">
-            Party Food Preparation
-          </option>
+        <select name="serviceCategory" value={form.serviceCategory} onChange={handleChange} required>
+          <option value="">Select Category</option>
           <option value="Cleaning">Cleaning</option>
           <option value="Electricity">Electricity</option>
           <option value="Plumbing">Plumbing</option>
-          <option value="Other Services">Other Services</option>
         </select>
 
-        <label>Description:</label>
-        <textarea
-          name="description"
-          value={form.description}
-          onChange={handleChange}
-          required
-        />
+        <textarea name="description" value={form.description} onChange={handleChange} placeholder="Description" required />
+        <input type="number" name="priceEstimate" value={form.priceEstimate} onChange={handleChange} placeholder="Price" required />
+        <input name="password" value={form.password} onChange={handleChange} placeholder="Password" required />
 
-        <label>Price Estimate (per day):</label>
-        <input
-          type="number"
-          name="priceEstimate"
-          value={form.priceEstimate}
-          onChange={handleChange}
-          min="0"
-          required
-        />
+        <input type="file" accept="image/*" onChange={handlePhotoChange} required />
+        {preview && <img src={preview} alt="preview" width="60" />}
 
-        <label>Password:</label>
-        <input
-          type="text"
-          name="password"
-          value={form.password}
-          onChange={handleChange}
-          autoComplete="new-password"
-          required
-        />
-
-        <label>Photo:</label>
-        <input
-          type="file"
-          onChange={handlePhotoChange}
-          accept="image/*"
-          required
-        />
-
-        {preview && (
-          <img
-            src={preview}
-            alt="Preview"
-            style={{ width: '60px', marginTop: '10px' }}
-          />
-        )}
-
-        <button type="submit" disabled={loading}>
+        <button disabled={loading}>
           {loading ? 'Adding...' : 'Add Provider'}
         </button>
       </form>
