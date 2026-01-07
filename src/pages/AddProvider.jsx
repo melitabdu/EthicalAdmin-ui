@@ -2,7 +2,11 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import './AddProvider.css';
 
+/* Backend API (DATA only) */
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+/* Frontend URL (PUBLIC LINKS) */
+const FRONTEND_URL = 'https://frontend-user-ui.vercel.app';
 
 const AddProvider = () => {
   const token = localStorage.getItem('adminToken');
@@ -15,6 +19,7 @@ const AddProvider = () => {
     priceEstimate: '',
     password: '',
   });
+
   const [photo, setPhoto] = useState(null);
   const [preview, setPreview] = useState(null);
   const [message, setMessage] = useState('');
@@ -23,7 +28,7 @@ const AddProvider = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const handlePhotoChange = (e) => {
@@ -34,11 +39,15 @@ const AddProvider = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (!token) {
       setMessage('❌ Admin authentication token is missing');
       return;
     }
+
     setLoading(true);
+    setMessage('');
+
     try {
       const api = axios.create({
         baseURL: `${API_BASE_URL}/api`,
@@ -46,23 +55,39 @@ const AddProvider = () => {
       });
 
       const formData = new FormData();
-      Object.entries(form).forEach(([key, value]) => formData.append(key, value));
+      Object.entries(form).forEach(([key, value]) =>
+        formData.append(key, value)
+      );
       if (photo) formData.append('photo', photo);
 
       const res = await api.post('/admin/add-provider', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
-      const provider = res.data;
+      // ✅ backend should return provider object
+      const provider = res.data?.provider || res.data;
+
       setAddedProvider(provider);
       setMessage(`✅ Provider "${provider.name}" added successfully`);
 
-      setForm({ name: '', phone: '', serviceCategory: '', description: '', priceEstimate: '', password: '' });
+      // reset form
+      setForm({
+        name: '',
+        phone: '',
+        serviceCategory: '',
+        description: '',
+        priceEstimate: '',
+        password: '',
+      });
       setPhoto(null);
       setPreview(null);
     } catch (err) {
       console.error(err);
-      setMessage(`❌ Error: ${err.response?.data?.message || 'Something went wrong'}`);
+      setMessage(
+        `❌ Error: ${
+          err.response?.data?.message || 'Something went wrong'
+        }`
+      );
       setAddedProvider(null);
     } finally {
       setLoading(false);
@@ -72,57 +97,122 @@ const AddProvider = () => {
   return (
     <div className="add-provider-container">
       <h2>Add Provider</h2>
+
       {message && <p className="form-message">{message}</p>}
 
-      {addedProvider && (
+      {/* ✅ Show public link AFTER provider is created */}
+      {addedProvider && addedProvider.slug && (
         <div className="added-provider-info">
           <p>
-            <strong>Slug (Public Link):</strong>{' '}
+            <strong>Public Provider Link:</strong>{' '}
             <a
-              href={`${API_BASE_URL}/p/${addedProvider.slug}`}
+              href={`${FRONTEND_URL}/p/${addedProvider.slug}`}
               target="_blank"
               rel="noopener noreferrer"
             >
-              {addedProvider.slug}
+              {FRONTEND_URL}/p/{addedProvider.slug}
             </a>
           </p>
+
           <button
             onClick={() =>
-              navigator.clipboard.writeText(`${API_BASE_URL}/p/${addedProvider.slug}`)
+              navigator.clipboard.writeText(
+                `${FRONTEND_URL}/p/${addedProvider.slug}`
+              )
             }
           >
-            Copy Link
+            📋 Copy Link
           </button>
+
           <p>
-            <strong>Password:</strong> {addedProvider.password}
+            <strong>Provider Password:</strong> {addedProvider.password}
           </p>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="add-provider-form" autoComplete="off">
+      <form
+        onSubmit={handleSubmit}
+        className="add-provider-form"
+        autoComplete="off"
+      >
         <label>Name:</label>
-        <input name="name" value={form.name} onChange={handleChange} required />
+        <input
+          name="name"
+          value={form.name}
+          onChange={handleChange}
+          required
+        />
+
         <label>Phone:</label>
-        <input name="phone" value={form.phone} onChange={handleChange} required />
+        <input
+          name="phone"
+          value={form.phone}
+          onChange={handleChange}
+          required
+        />
+
         <label>Service Category:</label>
-        <select name="serviceCategory" value={form.serviceCategory} onChange={handleChange} required>
+        <select
+          name="serviceCategory"
+          value={form.serviceCategory}
+          onChange={handleChange}
+          required
+        >
           <option value="">-- Select --</option>
           <option value="Finishing Works">Finishing Works</option>
-          <option value="Party Food Preparation">Party Food Preparation</option>
+          <option value="Party Food Preparation">
+            Party Food Preparation
+          </option>
           <option value="Cleaning">Cleaning</option>
           <option value="Electricity">Electricity</option>
           <option value="Plumbing">Plumbing</option>
           <option value="Other Services">Other Services</option>
         </select>
+
         <label>Description:</label>
-        <textarea name="description" value={form.description} onChange={handleChange} required />
+        <textarea
+          name="description"
+          value={form.description}
+          onChange={handleChange}
+          required
+        />
+
         <label>Price Estimate (per day):</label>
-        <input type="number" name="priceEstimate" value={form.priceEstimate} onChange={handleChange} required min="0" />
+        <input
+          type="number"
+          name="priceEstimate"
+          value={form.priceEstimate}
+          onChange={handleChange}
+          min="0"
+          required
+        />
+
         <label>Password:</label>
-        <input type="text" name="password" value={form.password} onChange={handleChange} required autoComplete="new-password" />
+        <input
+          type="text"
+          name="password"
+          value={form.password}
+          onChange={handleChange}
+          autoComplete="new-password"
+          required
+        />
+
         <label>Photo:</label>
-        <input type="file" onChange={handlePhotoChange} accept="image/*" required />
-        {preview && <img src={preview} alt="Preview" style={{ width: '60px', marginTop: '10px' }} />}
+        <input
+          type="file"
+          onChange={handlePhotoChange}
+          accept="image/*"
+          required
+        />
+
+        {preview && (
+          <img
+            src={preview}
+            alt="Preview"
+            style={{ width: '60px', marginTop: '10px' }}
+          />
+        )}
+
         <button type="submit" disabled={loading}>
           {loading ? 'Adding...' : 'Add Provider'}
         </button>
