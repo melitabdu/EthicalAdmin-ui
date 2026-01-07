@@ -3,11 +3,10 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "./ListProvider.css";
 
-/* Backend API (ONLY for data) */
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-/* Frontend URL (ONLY for public links) */
-const FRONTEND_URL = "https://frontend-user-ui.vercel.app";
+// ✅ FRONTEND PUBLIC URL (HARDCODED OR ENV)
+const FRONTEND_PUBLIC_URL = "https://frontend-user-ui.vercel.app";
 
 const ListProvider = () => {
   const token = localStorage.getItem("adminToken");
@@ -18,7 +17,6 @@ const ListProvider = () => {
 
   const navigate = useNavigate();
 
-  // Axios instance
   const api = axios.create({
     baseURL: `${API_BASE_URL}/api`,
     headers: {
@@ -43,24 +41,10 @@ const ListProvider = () => {
     if (token) fetchProviders();
   }, [token]);
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Delete this provider?")) return;
-
-    try {
-      await api.delete(`/admin/provider/${id}`);
-      setProviders((prev) => prev.filter((p) => p._id !== id));
-      alert("Provider deleted successfully");
-    } catch (err) {
-      console.error("Failed to delete provider:", err);
-      alert("Delete failed");
-    }
-  };
-
-  // ✅ CORRECT PUBLIC LINK (frontend, not backend)
   const handleCopyLink = (slug) => {
-    const link = `${FRONTEND_URL}/p/${slug}`;
+    const link = `${FRONTEND_PUBLIC_URL}/p/${slug}`;
     navigator.clipboard.writeText(link);
-    alert("Public provider link copied!");
+    alert("✅ Public link copied!");
   };
 
   if (loading) return <p>⏳ Loading providers...</p>;
@@ -97,7 +81,7 @@ const ListProvider = () => {
                       className="provider-photo-small"
                     />
                   ) : (
-                    <span>No photo</span>
+                    "No photo"
                   )}
                 </td>
                 <td>{p.name}</td>
@@ -107,16 +91,13 @@ const ListProvider = () => {
                   {p.slug ? (
                     <>
                       <a
-                        href={`${FRONTEND_URL}/p/${p.slug}`}
+                        href={`${FRONTEND_PUBLIC_URL}/p/${p.slug}`}
                         target="_blank"
                         rel="noreferrer"
                       >
                         Open
                       </a>
-                      <button
-                        onClick={() => handleCopyLink(p.slug)}
-                        style={{ marginLeft: "8px" }}
-                      >
+                      <button onClick={() => handleCopyLink(p.slug)}>
                         📋
                       </button>
                     </>
@@ -125,7 +106,7 @@ const ListProvider = () => {
                   )}
                 </td>
                 <td>
-                  <button onClick={() => handleDelete(p._id)}>🗑 Delete</button>
+                  {/* other actions */}
                 </td>
               </tr>
             ))}
