@@ -4,18 +4,16 @@ import { useNavigate } from "react-router-dom";
 import "./ListProvider.css";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-
-// ✅ FRONTEND PUBLIC URL (HARDCODED OR ENV)
-const FRONTEND_PUBLIC_URL = "https://frontend-user-ui.vercel.app";
+const FRONTEND_PUBLIC_URL =
+  import.meta.env.VITE_PUBLIC_FRONTEND_URL || "https://frontend-user-ui.vercel.app";
 
 const ListProvider = () => {
   const token = localStorage.getItem("adminToken");
+  const navigate = useNavigate();
 
   const [providers, setProviders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
-  const navigate = useNavigate();
 
   const api = axios.create({
     baseURL: `${API_BASE_URL}/api`,
@@ -27,7 +25,8 @@ const ListProvider = () => {
   useEffect(() => {
     const fetchProviders = async () => {
       try {
-        const res = await api.get("/admin/providers");
+        // ✅ CORRECT ENDPOINT
+        const res = await api.get("/providers");
         setProviders(res.data || []);
         setError("");
       } catch (err) {
@@ -44,7 +43,7 @@ const ListProvider = () => {
   const handleCopyLink = (slug) => {
     const link = `${FRONTEND_PUBLIC_URL}/p/${slug}`;
     navigator.clipboard.writeText(link);
-    alert("✅ Public link copied!");
+    alert("✅ Public provider link copied!");
   };
 
   if (loading) return <p>⏳ Loading providers...</p>;
@@ -66,8 +65,8 @@ const ListProvider = () => {
               <th>Name</th>
               <th>Category</th>
               <th>Phone</th>
+              <th>Slug</th>
               <th>Public Link</th>
-              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -87,6 +86,7 @@ const ListProvider = () => {
                 <td>{p.name}</td>
                 <td>{p.serviceCategory}</td>
                 <td>{p.phone}</td>
+                <td>{p.slug || "—"}</td>
                 <td>
                   {p.slug ? (
                     <>
@@ -97,16 +97,16 @@ const ListProvider = () => {
                       >
                         Open
                       </a>
-                      <button onClick={() => handleCopyLink(p.slug)}>
+                      <button
+                        style={{ marginLeft: "6px" }}
+                        onClick={() => handleCopyLink(p.slug)}
+                      >
                         📋
                       </button>
                     </>
                   ) : (
                     "N/A"
                   )}
-                </td>
-                <td>
-                  {/* other actions */}
                 </td>
               </tr>
             ))}
