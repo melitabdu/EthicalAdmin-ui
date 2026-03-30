@@ -1,6 +1,9 @@
 // src/pages/AdminDashboard.jsx
 import React, { useState } from 'react';
 import './AdminDashboard.css';
+import NotificationBell from "../components/NotificationBell";
+
+
 
 const AdminDashboard = () => {
   const [search, setSearch] = useState('');
@@ -16,6 +19,7 @@ const AdminDashboard = () => {
   const handleSearchChange = (e) => {
     setSearch(e.target.value);
   };
+  
 
   return (
     <div className="admin-dashboard-container">
@@ -52,6 +56,7 @@ const AdminDashboard = () => {
           <button onClick={() => window.location.href = '/admin/advideos'}>🎥 Manage Ads</button>
           <button onClick={() => window.location.href = '/admin/unavailable-dates'}>📅 Unavailable Dates</button>
         </div>
+        <NotificationBell role="admin" />
       </div>
     </div>
   );
